@@ -5,6 +5,7 @@ import type {
   SubscriptionState,
 } from "../billing/subscriptions.js";
 import { transitionSubscription } from "../billing/subscriptions.js";
+import { NotFoundError, UnauthorizedError, ValidationError } from "./api-errors.js";
 
 type AdminRequest = {
   auth?: {
@@ -14,7 +15,7 @@ type AdminRequest = {
 
 function assertAdmin(req: AdminRequest): void {
   if (req.auth?.role !== "service_admin") {
-    throw new Error("Service admin access required");
+    throw new UnauthorizedError("Service admin access required");
   }
 }
 
@@ -22,8 +23,9 @@ export function createAdminBillingApi(deps: { subscriptions: SubscriptionReposit
   return {
     async setTenantPlan(req: AdminRequest, tenantId: string, plan: PlanCode): Promise<Subscription> {
       assertAdmin(req);
+      if (!tenantId?.trim()) throw new ValidationError("tenantId is required");
       const current = await deps.subscriptions.getByTenant(tenantId);
-      if (!current) throw new Error("Subscription not found");
+      if (!current) throw new NotFoundError("Subscription not found");
       return deps.subscriptions.save({ ...current, plan });
     },
 
@@ -33,8 +35,9 @@ export function createAdminBillingApi(deps: { subscriptions: SubscriptionReposit
       state: SubscriptionState,
     ): Promise<Subscription> {
       assertAdmin(req);
+      if (!tenantId?.trim()) throw new ValidationError("tenantId is required");
       const current = await deps.subscriptions.getByTenant(tenantId);
-      if (!current) throw new Error("Subscription not found");
+      if (!current) throw new NotFoundError("Subscription not found");
       if (state === current.state) return current;
       return deps.subscriptions.save(transitionSubscription(current, state));
     },

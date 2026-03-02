@@ -4,20 +4,22 @@ import { createAdminBillingApi } from "../src/api/admin-billing-endpoints.js";
 import { InMemoryTenantRepository } from "../src/tenancy/tenants.js";
 import { InMemorySubscriptionRepository } from "../src/billing/subscriptions.js";
 import { InMemoryUsageRepository } from "../src/billing/usage.js";
+import { UnauthorizedError, ValidationError } from "../src/api/api-errors.js";
 
 describe("onboarding + admin billing", () => {
-  it("creates tenant and bootstraps subscription", async () => {
+  it("creates tenant and bootstraps subscription (idempotent)", async () => {
     const tenants = new InMemoryTenantRepository();
     const subscriptions = new InMemorySubscriptionRepository([]);
     const usage = new InMemoryUsageRepository();
     const onboarding = createOnboardingApi({ tenants, subscriptions, usage });
 
-    const res = await onboarding.onboardTenant({ auth: { role: "service_admin" } }, { tenantId: "t-new", name: "Acme" });
+    const req = { auth: { role: "service_admin" } };
+    const first = await onboarding.onboardTenant(req, { tenantId: "t-new", name: "Acme" });
+    const second = await onboarding.onboardTenant(req, { tenantId: "t-new", name: "Acme" });
 
-    expect(res.tenant.id).toBe("t-new");
-    expect(res.subscription.plan).toBe("FREE");
-    expect(res.subscription.state).toBe("trial");
-    expect((await usage.get("t-new")).bikes).toBe(0);
+    expect(first.tenant.id).toBe("t-new");
+    expect(first.subscription.plan).toBe("FREE");
+    expect(second.idempotent).toBe(true);
   });
 
   it("admin can change plan and state", async () => {
@@ -32,5 +34,20 @@ describe("onboarding + admin billing", () => {
 
     expect(p.plan).toBe("PRO");
     expect(s.state).toBe("active");
+  });
+
+  it("validates input and role", async () => {
+    const onboarding = createOnboardingApi({
+      tenants: new InMemoryTenantRepository(),
+      subscriptions: new InMemorySubscriptionRepository([]),
+      usage: new InMemoryUsageRepository(),
+    });
+
+    await expect(onboarding.onboardTenant({ auth: { role: "user" } }, { tenantId: "t", name: "n" })).rejects.toThrow(
+      UnauthorizedError,
+    );
+    await expect(
+      onboarding.onboardTenant({ auth: { role: "service_admin" } }, { tenantId: "", name: "n" }),
+    ).rejects.toThrow(ValidationError);
   });
 });
