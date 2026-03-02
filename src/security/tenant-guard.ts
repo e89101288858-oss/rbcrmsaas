@@ -1,11 +1,7 @@
 import type { SecurityEventLogger } from "./events.js";
+import { TenantDeniedError } from "../errors/access-errors.js";
 
-export class TenantAccessDeniedError extends Error {
-  constructor(message = "Tenant access denied") {
-    super(message);
-    this.name = "TenantAccessDeniedError";
-  }
-}
+export { TenantDeniedError as TenantAccessDeniedError };
 
 export type GuardInput = {
   actorTenantId?: string | null;
@@ -31,7 +27,7 @@ export function assertTenantAccess(
       reason: "actor or resource tenant is missing",
     });
 
-    throw new TenantAccessDeniedError("Missing tenant context");
+    throw new TenantDeniedError("Missing tenant context");
   }
 
   if (actorTenantId !== resourceTenantId) {
@@ -45,7 +41,7 @@ export function assertTenantAccess(
       at: new Date().toISOString(),
     });
 
-    throw new TenantAccessDeniedError();
+    throw new TenantDeniedError();
   }
 }
 
@@ -57,7 +53,7 @@ export type TenantScopedQuery = {
 
 export function tenantScopedQuery(actorTenantId?: string | null): TenantScopedQuery {
   if (!actorTenantId) {
-    throw new TenantAccessDeniedError("Missing tenant context");
+    throw new TenantDeniedError("Missing tenant context");
   }
 
   return {

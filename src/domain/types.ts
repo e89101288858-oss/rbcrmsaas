@@ -18,3 +18,14 @@ export type Document = TenantEntity & {
   rentalId?: string;
   name: string;
 };
+
+export type Client = TenantEntity & {
+  name: string;
+  phone: string;
+};
+
+export type Payment = TenantEntity & {
+  rentalId: string;
+  amountRub: number;
+  method: "cash" | "card" | "transfer";
+};
