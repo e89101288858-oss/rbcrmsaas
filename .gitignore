@@ -1,1 +1,13 @@
 node_modules/
+
+# OpenClaw agent-local files (must never be versioned)
+.openclaw/
+memory/
+AGENTS.md
+AGENT_SCOPE.md
+HEARTBEAT.md
+IDENTITY.md
+MEMORY.md
+SOUL.md
+TOOLS.md
+USER.md
