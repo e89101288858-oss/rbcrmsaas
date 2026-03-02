@@ -11,3 +11,15 @@ MEMORY.md
 SOUL.md
 TOOLS.md
 USER.md
+
+# OpenClaw agent local files
+.openclaw/
+memory/
+AGENTS.md
+SOUL.md
+USER.md
+MEMORY.md
+IDENTITY.md
+TOOLS.md
+HEARTBEAT.md
+AGENT_SCOPE.md
