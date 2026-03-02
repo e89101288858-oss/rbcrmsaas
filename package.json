@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "smoke": "vitest run tests/smoke-saas-flow.step9.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
